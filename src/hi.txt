@@ -1,0 +1,81 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const App = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('https://jsonplaceholder.typicode.com/posts');
+        setData(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleCreate = async (newData) => {
+    try {
+      const response = await axios.post('https://jsonplaceholder.typicode.com/posts', newData);
+      setData([...data, response.data]);
+    } catch (err) {
+      setError(err);
+    }
+  };
+
+  const handleUpdate = async (updatedData) => {
+    try {
+      const response = await axios.put(`https://jsonplaceholder.typicode.com/posts/${updatedData.id}`, updatedData);
+      setData(data.map((item) => (item.id === updatedData.id ? response.data : item)));
+    } catch (err) {
+      setError(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`https://jsonplaceholder.typicode.com/posts/${id}`);
+      setData(data.filter((item) => item.id !== id));
+    } catch (err) {
+      setError(err);
+    }
+  };
+
+  return (
+    <div>
+      {loading && <div>Loading...</div>}
+      {error && <div>{error.message}</div>}
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Body</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item) => (
+            <tr key={item.id}>
+              <td>{item.title}</td>
+              <td>{item.body}</td>
+              <td>
+                <button onClick={() => handleUpdate(item)}>Update</button>
+                <button onClick={() => handleDelete(item.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <button onClick={handleCreate}>Create</button>
+    </div>
+  );
+};
+
+export default App;
